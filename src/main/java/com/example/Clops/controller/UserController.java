@@ -1,6 +1,7 @@
 package com.example.Clops.controller;
 
 
+import com.example.Clops.dto.ChangePasswordRequest;
 import com.example.Clops.dto.UserRequest;
 import com.example.Clops.dto.UserResponse;
 import com.example.Clops.service.UserService;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+
 import java.util.Optional;
 
 @RestController
@@ -29,6 +32,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "User API", description = "CRUD операции для управления пользователями")
+@SecurityRequirement(name = "bearer-key") // Добавляем требование JWT токена для всех endpoints
 public class UserController {
 
     private final UserService userService;
@@ -36,6 +40,7 @@ public class UserController {
     @Operation(summary = "Получить всех пользователей", description = "Возвращает список пользователей с пагинацией")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Успешное получение списка"),
+            @ApiResponse(responseCode = "401", description = "Не авторизован"),
             @ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера")
     })
     @GetMapping
@@ -64,6 +69,7 @@ public class UserController {
     @Operation(summary = "Получить активных пользователей", description = "Возвращает список активных пользователей с пагинацией")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Успешное получение списка"),
+            @ApiResponse(responseCode = "401", description = "Не авторизован"),
             @ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера")
     })
     @GetMapping("/active")
@@ -92,6 +98,7 @@ public class UserController {
     @Operation(summary = "Получить пользователя по ID", description = "Возвращает пользователя по указанному ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Пользователь найден"),
+            @ApiResponse(responseCode = "401", description = "Не авторизован"),
             @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
             @ApiResponse(responseCode = "400", description = "Неверный ID пользователя")
     })
@@ -108,6 +115,7 @@ public class UserController {
     @Operation(summary = "Получить пользователя по имени", description = "Возвращает пользователя по имени пользователя")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Пользователь найден"),
+            @ApiResponse(responseCode = "401", description = "Не авторизован"),
             @ApiResponse(responseCode = "404", description = "Пользователь не найден")
     })
     @GetMapping("/username/{username}")
@@ -120,11 +128,13 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @Operation(summary = "Создать пользователя", description = "Создает нового пользователя")
+    @Operation(summary = "Создать пользователя", description = "Создает нового пользователя (требуются права администратора)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Пользователь успешно создан",
                     content = @Content(schema = @Schema(implementation = UserResponse.class))),
             @ApiResponse(responseCode = "400", description = "Неверные данные пользователя"),
+            @ApiResponse(responseCode = "401", description = "Не авторизован"),
+            @ApiResponse(responseCode = "403", description = "Недостаточно прав"),
             @ApiResponse(responseCode = "409", description = "Пользователь с таким именем уже существует")
     })
     @PostMapping
@@ -143,6 +153,7 @@ public class UserController {
     @Operation(summary = "Обновить пользователя", description = "Полностью обновляет данные пользователя")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Пользователь успешно обновлен"),
+            @ApiResponse(responseCode = "401", description = "Не авторизован"),
             @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
             @ApiResponse(responseCode = "400", description = "Неверные данные пользователя"),
             @ApiResponse(responseCode = "409", description = "Пользователь с таким именем уже существует")
@@ -156,17 +167,19 @@ public class UserController {
             @Valid @RequestBody UserRequest userRequest) {
 
         try {
-            return userService.update(id, userRequest)
-                    .map(ResponseEntity::ok)
+            Optional<UserResponse> updatedUser = userService.update(id, userRequest);
+            return updatedUser.map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    @Operation(summary = "Удалить пользователя", description = "Удаляет пользователя по ID")
+    @Operation(summary = "Удалить пользователя", description = "Удаляет пользователя по ID (требуются права администратора)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Пользователь успешно удален"),
+            @ApiResponse(responseCode = "401", description = "Не авторизован"),
+            @ApiResponse(responseCode = "403", description = "Недостаточно прав"),
             @ApiResponse(responseCode = "404", description = "Пользователь не найден")
     })
     @DeleteMapping("/{id}")
@@ -182,6 +195,7 @@ public class UserController {
     @Operation(summary = "Деактивировать пользователя", description = "Деактивирует пользователя по ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Пользователь успешно деактивирован"),
+            @ApiResponse(responseCode = "401", description = "Не авторизован"),
             @ApiResponse(responseCode = "404", description = "Пользователь не найден")
     })
     @PatchMapping("/{id}/deactivate")
@@ -193,4 +207,30 @@ public class UserController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @Operation(summary = "Смена пароля", description = "Изменяет пароль пользователя после проверки старого пароля")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Пароль успешно изменен"),
+            @ApiResponse(responseCode = "400", description = "Неверный старый пароль"),
+            @ApiResponse(responseCode = "401", description = "Не авторизован"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+    })
+    @PatchMapping("/{id}/password")
+    public ResponseEntity<String> changePassword(
+            @Parameter(description = "ID пользователя", example = "1", required = true)
+            @PathVariable Integer id,
+
+            @Parameter(description = "Данные для смены пароля", required = true)
+            @Valid @RequestBody ChangePasswordRequest changePasswordRequest) {
+
+        boolean changed = userService.changePassword(
+                id,
+                changePasswordRequest.getOldPassword(),
+                changePasswordRequest.getNewPassword()
+        );
+
+        return changed ? ResponseEntity.ok("Password changed successfully")
+                : ResponseEntity.badRequest().body("Invalid old password or user not found");
+    }
+
 }

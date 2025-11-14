@@ -1,47 +1,50 @@
 package com.example.Clops.service;
 
+
 import com.example.Clops.dto.UserRequest;
 import com.example.Clops.dto.UserResponse;
 import com.example.Clops.entity.User;
-import com.example.Clops.service.mapper.UserMapper;
 import com.example.Clops.repository.UserRepository;
+import com.example.Clops.service.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
-
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public Page<UserResponse> findAll(Pageable pageable) {
         return userRepository.findAll(pageable)
-                .map(UserMapper.INSTANCE::toResponse);
+                .map(userMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
     public Page<UserResponse> findByActiveStatus(Boolean isActive, Pageable pageable) {
         return userRepository.findByIsActive(isActive, pageable)
-                .map(UserMapper.INSTANCE::toResponse);
+                .map(userMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
     public Optional<UserResponse> findById(Integer id) {
         return userRepository.findById(id)
-                .map(UserMapper.INSTANCE::toResponse);
+                .map(userMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
     public Optional<UserResponse> findByUsername(String username) {
         return userRepository.findByUsername(username)
-                .map(UserMapper.INSTANCE::toResponse);
+                .map(userMapper::toResponse);
     }
 
     @Transactional
@@ -50,9 +53,11 @@ public class UserService {
             throw new IllegalArgumentException("Username already exists: " + userRequest.getUsername());
         }
 
-        User user = UserMapper.INSTANCE.toEntity(userRequest);
+        User user = userMapper.toEntity(userRequest);
+        // Хэшируем пароль перед сохранением
+        user.setPasswordHash(passwordEncoder.encode(userRequest.getPassword()));
         User savedUser = userRepository.save(user);
-        return UserMapper.INSTANCE.toResponse(savedUser);
+        return userMapper.toResponse(savedUser);
     }
 
     @Transactional
@@ -70,9 +75,16 @@ public class UserService {
             throw new IllegalArgumentException("Username already exists: " + userRequest.getUsername());
         }
 
-        UserMapper.INSTANCE.updateEntity(userRequest, user);
+        user.setUsername(userRequest.getUsername());
+
+        // Если пароль изменен, кодируем новый пароль
+        if (userRequest.getPassword() != null && !userRequest.getPassword().isEmpty()) {
+            user.setPasswordHash(passwordEncoder.encode(userRequest.getPassword()));
+        }
+
+        user.setIsActive(userRequest.getIsActive());
         User updatedUser = userRepository.save(user);
-        return Optional.of(UserMapper.INSTANCE.toResponse(updatedUser));
+        return Optional.of(userMapper.toResponse(updatedUser));
     }
 
     @Transactional
@@ -90,8 +102,26 @@ public class UserService {
         if (user.isPresent()) {
             user.get().setIsActive(false);
             User updatedUser = userRepository.save(user.get());
-            return Optional.of(UserMapper.INSTANCE.toResponse(updatedUser));
+            return Optional.of(userMapper.toResponse(updatedUser));
         }
         return Optional.empty();
+    }
+
+    /**
+     * Смена пароля (для зарегистрированных пользователей)
+     * @param id ID пользователя
+     * @param oldPassword старый пароль
+     * @param newPassword новый пароль
+     * @return true если пароль успешно изменен
+     */
+    @Transactional
+    public boolean changePassword(Integer id, String oldPassword, String newPassword) {
+        Optional<User> user = userRepository.findById(id);
+        if (user.isPresent() && passwordEncoder.matches(oldPassword, user.get().getPasswordHash())) {
+            user.get().setPasswordHash(passwordEncoder.encode(newPassword));
+            userRepository.save(user.get());
+            return true;
+        }
+        return false;
     }
 }
