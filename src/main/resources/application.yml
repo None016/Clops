@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://77.222.46.203:5432/Clops
+    url: jdbc:postgresql://77.222.46.203:5432/Clop
     username: postgres
     password: 12Hiro0016
     driver-class-name: org.postgresql.Driver
@@ -17,13 +17,12 @@ spring:
 
 jwt:
   secret: your-super-secret-key-that-is-at-least-256-bits-long
-  expiration: 86400000 # 24 ????
+  expiration: 86400000 # 24
   issuer: user-service
 
 server:
   port: 8080
 
-# SpringDoc OpenAPI ????????????
 springdoc:
   api-docs:
     path: /api-docs

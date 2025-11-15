@@ -51,6 +51,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/spatial-objects").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/spatial-objects/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/spatial-objects/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/fiber-connections/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/fiber-connections").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/fiber-connections/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/fiber-connections/**").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/fiber-connections/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, customUserDetailsService),
