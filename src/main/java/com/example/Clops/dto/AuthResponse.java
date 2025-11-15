@@ -8,15 +8,15 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Ответ с данными пользователя")
-public class UserResponse {
+@Schema(description = "Ответ с JWT токеном")
+public class AuthResponse {
 
-    @Schema(description = "ID пользователя", example = "1")
-    private Integer id;
+    @Schema(description = "JWT токен", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+    private String token;
+
+    @Schema(description = "Тип токена", example = "Bearer")
+    private String type = "Bearer";
 
     @Schema(description = "Имя пользователя", example = "johndoe")
     private String username;
-
-    @Schema(description = "Активен ли пользователь", example = "true")
-    private Boolean isActive;
 }

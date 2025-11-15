@@ -23,9 +23,8 @@ public class User {
     @Size(min = 3, max = 255, message = "Username must be between 3 and 255 characters")
     private String username;
 
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash", nullable = false, length = 512)
     @NotBlank(message = "Password hash cannot be blank")
-    @Size(min = 1, max = 255, message = "Password hash must be between 1 and 255 characters")
     private String passwordHash;
 
     @Column(name = "is_active")

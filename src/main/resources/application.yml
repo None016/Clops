@@ -12,9 +12,33 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        spatial:
+          dialect: org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect
+
+jwt:
+  secret: your-super-secret-key-that-is-at-least-256-bits-long
+  expiration: 86400000 # 24 ????
+  issuer: user-service
 
 server:
   port: 8080
+
+# SpringDoc OpenAPI ????????????
+springdoc:
+  api-docs:
+    path: /api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    try-it-out-enabled: true
+    filter: true
+    persist-authorization: true
+    display-request-duration: true
+    groups-order: asc
+    enabled: true
+  show-actuator: false
 
 logging:
   level:

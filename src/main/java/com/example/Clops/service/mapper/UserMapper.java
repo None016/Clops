@@ -1,22 +1,48 @@
 package com.example.Clops.service.mapper;
 
+
 import com.example.Clops.dto.UserRequest;
 import com.example.Clops.dto.UserResponse;
 import com.example.Clops.entity.User;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
-@Mapper
-public interface UserMapper {
+@Component
+@RequiredArgsConstructor
+public class UserMapper {
 
-    UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
+    public User toEntity(UserRequest userRequest) {
+        if (userRequest == null) {
+            return null;
+        }
 
-    @Mapping(target = "id", ignore = true)
-    User toEntity(UserRequest userRequest);
+        User user = new User();
+        user.setUsername(userRequest.getUsername());
+        // Пароль НЕ хэшируем здесь - это будет сделано в сервисе
+        user.setPasswordHash(userRequest.getPassword()); // Временное значение
+        user.setIsActive(userRequest.getIsActive());
+        return user;
+    }
 
-    UserResponse toResponse(User user);
+    public UserResponse toResponse(User user) {
+        if (user == null) {
+            return null;
+        }
 
-    @Mapping(target = "id", ignore = true)
-    void updateEntity(UserRequest userRequest, @org.mapstruct.MappingTarget User user);
+        UserResponse response = new UserResponse();
+        response.setId(user.getId());
+        response.setUsername(user.getUsername());
+        response.setIsActive(user.getIsActive());
+        return response;
+    }
+
+    public void updateEntity(UserRequest userRequest, User user) {
+        if (userRequest == null || user == null) {
+            return;
+        }
+
+        user.setUsername(userRequest.getUsername());
+        // Пароль обновляется в сервисе
+        user.setIsActive(userRequest.getIsActive());
+    }
 }
