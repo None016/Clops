@@ -47,6 +47,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/territories").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/territories/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/territories/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/spatial-objects/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/spatial-objects").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/spatial-objects/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/spatial-objects/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, customUserDetailsService),

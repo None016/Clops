@@ -12,6 +12,8 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        spatial:
+          dialect: org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect
 
 jwt:
   secret: your-super-secret-key-that-is-at-least-256-bits-long
@@ -32,7 +34,7 @@ springdoc:
     tags-sorter: alpha
     try-it-out-enabled: true
     filter: true
-    persist-authorization: true  # ????????? ??????????? ??? ????????????
+    persist-authorization: true
     display-request-duration: true
     groups-order: asc
     enabled: true
