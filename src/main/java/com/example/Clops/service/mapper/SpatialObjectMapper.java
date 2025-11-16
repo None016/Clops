@@ -1,6 +1,5 @@
 package com.example.Clops.service.mapper;
 
-
 import com.example.Clops.dto.SpatialObjectRequest;
 import com.example.Clops.dto.SpatialObjectResponse;
 import com.example.Clops.entity.SpatialObject;
